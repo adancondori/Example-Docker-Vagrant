@@ -1,0 +1,20 @@
+$script = <<-'SCRIPT'
+sudo yum -y install nano
+sudo yum -y install ntp
+sudo yum -y install lsof
+sudo sh -c "echo Bienvenidos a mi servidor > /etc/motd"
+sudo -s
+sudo echo -e "miaplicacion.db.ip=192.168.10.12\nmiaplicacion.db.usuario=juancho\nmiaplicacion.db.puerto=5432" > /etc/miaplicacion.conf
+sudo useradd -u 1500 adan -p $(openssl passwd -1 test) -g users -m -d /home/uagrm -s /bin/bash
+sudo echo -e "server 0.south-america.pool.ntp.org\nserver 1.south-america.pool.ntp.org\nserver 2.south-america.pool.ntp.org\nserver 3.south-america.pool.ntp.org\nlogfile /var/log/ntp.log" > /etc/ntp.conf
+sudo systemctl start ntpd
+SCRIPT
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.vm.network "forwarded_port", guest: 9000, host: 9000
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+    v.cpus = 2
+    config.vm.provision "shell", inline: $script
+  end
+end

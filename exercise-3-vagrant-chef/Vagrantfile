@@ -1,0 +1,33 @@
+$script = <<-'SCRIPT'
+curl https://packages.chef.io/files/stable/chef-workstation/21.1.247/el/7/chef-workstation-21.1.247-1.el7.x86_64.rpm --output chef-workstation-21.1.247-1.el7.x86_64.rpm 
+rpm -ivh chef-workstation-21.1.247-1.el7.x86_64.rpm
+sudo yum -y install vim
+sudo mkdir cookbooks
+sudo chef generate cookbook cookbooks/scm --chef-license accept
+# step 6
+sudo mkdir cookbooks/scm/templates
+# step 6.a
+sudo cp motd.erb cookbooks/scm/templates/motd.erb
+# step 6.b
+sudo cp miaplicacion.conf.erb cookbooks/scm/templates/miaplicacion.conf.erb
+# step 7
+sudo mkdir cookbooks/scm/attributes
+sudo cp default-attributes.rb cookbooks/scm/attributes/default.rb
+sudo cp default-recipe.rb cookbooks/scm/recipes/default.rb
+# step 8
+sudo chef-client --local-mode -j atributos.json
+SCRIPT
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.vm.network "forwarded_port", guest: 9000, host: 9000
+  config.vm.provision "file", source: "motd.erb", destination: "/home/vagrant/motd.erb"
+  config.vm.provision "file", source: "miaplicacion.conf.erb", destination: "/home/vagrant/miaplicacion.conf.erb"
+  config.vm.provision "file", source: "default-attributes.rb", destination: "/home/vagrant/default-attributes.rb"
+  config.vm.provision "file", source: "atributos.json", destination: "/home/vagrant/atributos.json"
+  config.vm.provision "file", source: "default-recipe.rb", destination: "/home/vagrant/default-recipe.rb"
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+    v.cpus = 2
+    config.vm.provision "shell", inline: $script
+  end
+end
